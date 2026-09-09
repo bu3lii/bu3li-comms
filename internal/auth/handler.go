@@ -71,21 +71,16 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
-	cookie,err := r.Cookie("session_id")
-	if err != nil {
-		http.Error(w,"unauthorized",http.StatusUnauthorized)
-		return
-	}
 
-	userID, err := h.sessions.GetUserID(r.Context(),cookie.Value)
-	if err != nil {
+	userID,ok := UserIDFromContext(r.Context())
+	if !ok {
 		http.Error(w,"unauthorized",http.StatusUnauthorized)
 		return
 	}
 
 	user,err := h.users.GetByID(r.Context(),userID)
 	if err != nil {
-		http.Error(w,"unauthorized",http.StatusUnauthorized)
+		http.Error(w,"failed to load user",http.StatusInternalServerError)
 		return
 	}
 
