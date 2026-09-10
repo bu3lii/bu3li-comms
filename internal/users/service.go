@@ -13,9 +13,9 @@ type User struct {
 }
 
 type UserWithPassword struct {
-	ID string
-	Username string
-	Email string
+	ID           string
+	Username     string
+	Email        string
 	PasswordHash string
 }
 
@@ -39,26 +39,26 @@ func (s *Service) Create(ctx context.Context, username string, email string, pas
 	return user, err
 }
 
-func (s *Service) GetByEmail(ctx context.Context, email string) (UserWithPassword,error) {
+func (s *Service) GetByEmail(ctx context.Context, email string) (UserWithPassword, error) {
 	var user UserWithPassword
 
-	err := s.db.QueryRow(ctx,`
+	err := s.db.QueryRow(ctx, `
 		SELECT id,username,email,password_hash
 		FROM users
 		WHERE email = $1
-	`,email).Scan(&user.ID,&user.Username,&user.Email,&user.PasswordHash)
+	`, email).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash)
 
-	return user,err
+	return user, err
 }
 
-func (s *Service) GetByID(ctx context.Context, userID string) (User,error) {
+func (s *Service) GetByID(ctx context.Context, userID string) (User, error) {
 	var user User
 
-	err := s.db.QueryRow(ctx,`
+	err := s.db.QueryRow(ctx, `
 		SELECT id, username, email
 		FROM users
 		WHERE id = $1
-	`,userID).Scan(&user.ID,&user.Username,&user.Email)
+	`, userID).Scan(&user.ID, &user.Username, &user.Email)
 
-	return user,err
+	return user, err
 }

@@ -2,6 +2,7 @@ package realtime
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 
 	"github.com/coder/websocket"
@@ -11,6 +12,11 @@ import (
 type Event struct {
 	Type string `json:"type"`
 	Data any    `json:"data"`
+}
+
+type IncomingEvent struct {
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
 }
 
 type Client struct {
@@ -31,27 +37,42 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) Register(client *Client) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	if h.clients[client.UserID] == nil {
-		h.clients[client.UserID] = make(map[*Client]struct{})
-	}
-
-	h.clients[client.UserID][client] = struct{}{}
-}
-
-func (h *Hub) Unregister(client *Client) {
+func (h *Hub) Register(client *Client) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	connections := h.clients[client.UserID]
+
+	firstConnection := len(connections) == 0
+
+	if connections == nil {
+		connections = make(map[*Client]struct{})
+		h.clients[client.UserID] = connections
+	}
+
+	connections[client] = struct{}{}
+
+	return firstConnection
+}
+
+func (h *Hub) Unregister(client *Client) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	connections := h.clients[client.UserID]
+
+	if connections == nil {
+		return true
+	}
 	delete(connections, client)
 
-	if len(connections) == 0 {
+	lastConnection := len(connections) == 0
+
+	if lastConnection {
 		delete(h.clients, client.UserID)
 	}
+
+	return lastConnection
 }
 
 func (h *Hub) SendToUser(ctx context.Context, userID string, event Event) {
@@ -73,5 +94,12 @@ func (c *Client) Write(ctx context.Context, event Event) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 
-	return wsjson.Write(ctx,c.Conn,event)
+	return wsjson.Write(ctx, c.Conn, event)
+}
+
+func (h *Hub) ConnectionCount(userID string) int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	return len(h.clients[userID])
 }

@@ -31,7 +31,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword,err := security.HashPassword(req.Password)
+	hashedPassword, err := security.HashPassword(req.Password)
 	if err != nil {
 		http.Error(w, "failed to process password", http.StatusInternalServerError)
 		return

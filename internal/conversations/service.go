@@ -72,24 +72,24 @@ func (s *Service) IsMember(ctx context.Context, conversationID string, userID st
 }
 
 func (s *Service) AddMember(ctx context.Context, conversationID string, userID string) error {
-	_,err := s.db.Exec(ctx,`
+	_, err := s.db.Exec(ctx, `
 		INSERT INTO conversation_members (conversation_id, user_id)
 		VALUES ($1, $2)
 		ON CONFLICT DO NOTHING
-	`,conversationID,userID)
+	`, conversationID, userID)
 
 	return err
 }
 
 func (s *Service) ListMemberIDs(ctx context.Context, conversationID string) ([]string, error) {
-	rows,err := s.db.Query(ctx,`
+	rows, err := s.db.Query(ctx, `
 		SELECT user_id
 		FROM conversation_members
 		WHERE conversation_id = $1
-	`,conversationID)
+	`, conversationID)
 
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -100,11 +100,42 @@ func (s *Service) ListMemberIDs(ctx context.Context, conversationID string) ([]s
 
 		err = rows.Scan(&id)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 
 		ids = append(ids, id)
 	}
 
-	return ids,rows.Err()
+	return ids, rows.Err()
+}
+
+func (s *Service) ListPeerIDs(ctx context.Context, userID string) ([]string, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT DISTINCT cm2.user_id
+		FROM conversation_members cm1
+		JOIN conversation_members cm2
+			ON cm1.conversation_id = cm2.conversation_id
+		WHERE cm1.user_id = $1
+			AND cm2.user_id != $1
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var ids []string
+
+	for rows.Next() {
+		var id string
+
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+
+		ids = append(ids, id)
+	}
+
+	return ids, rows.Err()
 }

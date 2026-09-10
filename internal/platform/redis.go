@@ -1,6 +1,6 @@
 package platform
 
-import(
+import (
 	"context"
 	"fmt"
 	"os"
@@ -8,7 +8,7 @@ import(
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRedis(ctx context.Context) (*redis.Client,error) {
+func NewRedis(ctx context.Context) (*redis.Client, error) {
 	addr := os.Getenv("REDIS_ADDR")
 	if addr == "" {
 		addr = "localhost:6379"
@@ -20,8 +20,8 @@ func NewRedis(ctx context.Context) (*redis.Client,error) {
 
 	err := rdb.Ping(ctx).Err()
 	if err != nil {
-		return nil, fmt.Errorf("ping redis: %w",err)
+		return nil, fmt.Errorf("ping redis: %w", err)
 	}
 
-	return rdb,nil
+	return rdb, nil
 }

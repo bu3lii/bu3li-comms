@@ -23,19 +23,19 @@ func (s *SessionService) Create(ctx context.Context, userID string) (string, err
 
 	key := "session:" + sessionID
 
-	err := s.redis.Set(ctx,key,userID,SessionTTL).Err()
+	err := s.redis.Set(ctx, key, userID, SessionTTL).Err()
 
 	if err != nil {
-		return "",nil
+		return "", nil
 	}
 
-	return sessionID,nil
+	return sessionID, nil
 }
 
 func (s *SessionService) Delete(ctx context.Context, sessionID string) error {
-	return s.redis.Del(ctx,"session:"+sessionID).Err()
+	return s.redis.Del(ctx, "session:"+sessionID).Err()
 }
 
-func (s *SessionService) GetUserID(ctx context.Context,sessionID string,) (string, error) {
-	return s.redis.Get(ctx,"session:"+sessionID).Result()
+func (s *SessionService) GetUserID(ctx context.Context, sessionID string) (string, error) {
+	return s.redis.Get(ctx, "session:"+sessionID).Result()
 }

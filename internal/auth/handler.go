@@ -72,36 +72,36 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 
-	userID,ok := UserIDFromContext(r.Context())
+	userID, ok := UserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w,"unauthorized",http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user,err := h.users.GetByID(r.Context(),userID)
+	user, err := h.users.GetByID(r.Context(), userID)
 	if err != nil {
-		http.Error(w,"failed to load user",http.StatusInternalServerError)
+		http.Error(w, "failed to load user", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	cookie,err := r.Cookie("session_id")
+	cookie, err := r.Cookie("session_id")
 	if err == nil {
-		_ = h.sessions.Delete(r.Context(),cookie.Value)
+		_ = h.sessions.Delete(r.Context(), cookie.Value)
 	}
 
-	http.SetCookie(w,&http.Cookie{
-		Name: "session_id",
-		Value: "",
-		Path: "/",
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    "",
+		Path:     "/",
 		HttpOnly: true,
-		Secure: false,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge: -1,
+		MaxAge:   -1,
 	})
 
 	w.WriteHeader(http.StatusNoContent)

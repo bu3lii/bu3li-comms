@@ -9,6 +9,7 @@ import (
 	"github.com/bu3lii/bu3li-comms/internal/conversations"
 	"github.com/bu3lii/bu3li-comms/internal/messages"
 	"github.com/bu3lii/bu3li-comms/internal/platform"
+	"github.com/bu3lii/bu3li-comms/internal/presence"
 	"github.com/bu3lii/bu3li-comms/internal/realtime"
 	"github.com/bu3lii/bu3li-comms/internal/users"
 )
@@ -32,33 +33,36 @@ func main() {
 	sessionService := auth.NewSessionService(rdb)
 
 	userHandler := users.NewHandler(userService)
-	authHandler := auth.NewHandler(userService,sessionService)
+	authHandler := auth.NewHandler(userService, sessionService)
 
 	conversationService := conversations.NewService(db)
 	conversationHandler := conversations.NewHandler(conversationService)
 
+	presenceService := presence.NewService(rdb)
+
 	hub := realtime.NewHub()
-	realtimeHandler := realtime.NewHandler(hub)
 
 	messageService := messages.NewService(db)
-	messageHandler := messages.NewHandler(messageService,conversationService,hub)
 
+	realtimeHandler := realtime.NewHandler(hub, presenceService, conversationService, messageService)
+	messageHandler := messages.NewHandler(messageService, conversationService, hub)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /users", userHandler.Create)
 	mux.HandleFunc("POST /login", authHandler.Login)
-	mux.Handle("GET /me",authHandler.RequireAuth(http.HandlerFunc(authHandler.Me)))
-	mux.HandleFunc("POST /logout", authHandler.Logout)
+	mux.Handle("POST /logout", authHandler.RequireAuth(http.HandlerFunc(authHandler.Logout)))
+	mux.Handle("GET /me", authHandler.RequireAuth(http.HandlerFunc(authHandler.Me)))
 
-	mux.Handle("POST /conversations",authHandler.RequireAuth(http.HandlerFunc(conversationHandler.Create)))
-	mux.Handle("POST /conversations/{id}/members",authHandler.RequireAuth(http.HandlerFunc(conversationHandler.AddMember)))
+	mux.Handle("POST /conversations", authHandler.RequireAuth(http.HandlerFunc(conversationHandler.Create)))
+	mux.Handle("POST /conversations/{id}/members", authHandler.RequireAuth(http.HandlerFunc(conversationHandler.AddMember)))
 
-	mux.Handle("POST /conversations/{id}/messages",authHandler.RequireAuth(http.HandlerFunc(messageHandler.Create)))
-	mux.Handle("GET /conversations/{id}/messages",authHandler.RequireAuth(http.HandlerFunc(messageHandler.List)))
+	mux.Handle("POST /conversations/{id}/messages", authHandler.RequireAuth(http.HandlerFunc(messageHandler.Create)))
+	mux.Handle("GET /conversations/{id}/messages", authHandler.RequireAuth(http.HandlerFunc(messageHandler.List)))
 
-	mux.Handle("GET /ws",authHandler.RequireAuth(http.HandlerFunc(realtimeHandler.Connect)))
-
+	mux.Handle("PATCH /messages/{messageID}", authHandler.RequireAuth(http.HandlerFunc(messageHandler.Update)))
+	mux.Handle("DELETE /messages/{messageID}", authHandler.RequireAuth(http.HandlerFunc(messageHandler.Delete)))
+	mux.Handle("GET /ws", authHandler.RequireAuth(http.HandlerFunc(realtimeHandler.Connect)))
 
 	log.Println("API listening on :8080")
 
