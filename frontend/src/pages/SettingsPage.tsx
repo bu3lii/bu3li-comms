@@ -14,7 +14,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-canvas text-text-primary">
+    <div className="smooth-swap min-h-dvh bg-canvas text-text-primary">
       <header className="mx-auto flex max-w-2xl items-center gap-3 px-6 py-6">
         <Link
           to="/chat"

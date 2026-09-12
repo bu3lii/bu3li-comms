@@ -3,7 +3,7 @@ import { callManager } from "../callManager";
 import { useConversations } from "../../hooks/useConversations";
 import { otherMembers } from "../../lib/conversation";
 import { CallParticipantTile } from "./CallParticipantTile";
-import { CollapseIcon, MicIcon, MicOffIcon, PhoneOffIcon } from "./icons";
+import { CollapseIcon, HeadphonesIcon, HeadphonesOffIcon, MicIcon, MicOffIcon, PhoneOffIcon } from "./icons";
 
 export function FullScreenCallView({ currentUserId }: { currentUserId: string }) {
   const conversationId = useCallStore((s) => s.conversationId);
@@ -11,6 +11,7 @@ export function FullScreenCallView({ currentUserId }: { currentUserId: string })
   const remoteStreams = useCallStore((s) => s.remoteStreams);
   const localStream = useCallStore((s) => s.localStream);
   const isMuted = useCallStore((s) => s.isMuted);
+  const isDeafened = useCallStore((s) => s.isDeafened);
 
   const others = participantIds.filter((id) => id !== currentUserId);
 
@@ -55,6 +56,17 @@ export function FullScreenCallView({ currentUserId }: { currentUserId: string })
           }`}
         >
           {isMuted ? <MicOffIcon /> : <MicIcon />}
+        </button>
+        <button
+          type="button"
+          onClick={() => callManager.toggleDeafen()}
+          aria-label={isDeafened ? "Undeafen" : "Deafen"}
+          aria-pressed={isDeafened}
+          className={`flex h-12 w-12 items-center justify-center rounded-full ${
+            isDeafened ? "bg-danger/15 text-danger" : "bg-surface-raised text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          {isDeafened ? <HeadphonesOffIcon /> : <HeadphonesIcon />}
         </button>
         <button
           type="button"

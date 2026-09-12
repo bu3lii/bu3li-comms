@@ -15,5 +15,29 @@ services:
     ports:
       - "6379:6379"
 
+  # Optional local TURN server, closing the "calls only work over STUN" gap
+  # from ROADMAP.md. STUN alone fails on symmetric NATs and locked-down
+  # corporate networks; coturn relays media in those cases. Gated behind the
+  # "turn" profile so plain `docker compose up`/`./dev.sh` (used for normal
+  # day-to-day dev) never tries to pull or start it — opt in explicitly with
+  # `docker compose --profile turn up -d`, then set
+  # VITE_TURN_URL/VITE_TURN_USERNAME/VITE_TURN_CREDENTIAL (see
+  # frontend/.env.example) to actually use it.
+  coturn:
+    profiles: ["turn"]
+    image: coturn/coturn:4
+    command:
+      - -n
+      - --log-file=stdout
+      - --listening-port=3478
+      - --realm=bu3li-comms.local
+      - --user=bu3li:bu3li-turn-dev
+      - --no-cli
+      - --no-tls
+      - --no-dtls
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+
 volumes:
   postgres_data:

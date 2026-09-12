@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Avatar } from "../ui/Avatar";
 import { useIsOnline } from "../../stores/presenceStore";
-import { conversationDisplayName, directPeerId } from "../../lib/conversation";
+import { conversationDisplayName, directPeer } from "../../lib/conversation";
 import { CallButton } from "../../calls/components/CallButton";
 import type { ConversationSummary } from "../../types/conversation";
 
@@ -12,7 +12,8 @@ export function ConversationHeader({
   conversation: ConversationSummary;
   currentUserId: string;
 }) {
-  const peerId = directPeerId(conversation, currentUserId);
+  const peer = directPeer(conversation, currentUserId);
+  const peerId = peer?.id;
   const isOnline = useIsOnline(peerId);
   const name = conversationDisplayName(conversation, currentUserId);
 
@@ -25,7 +26,7 @@ export function ConversationHeader({
       >
         <BackIcon />
       </Link>
-      <Avatar seed={conversation.id} name={name} />
+      <Avatar seed={conversation.id} name={name} userId={peer?.id} hasAvatar={peer?.has_avatar} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-text-primary">{name}</p>
         {peerId ? (

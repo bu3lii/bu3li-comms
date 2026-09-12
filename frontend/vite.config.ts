@@ -13,6 +13,7 @@ const PROXIED_PATHS = [
   "/me",
   "/conversations",
   "/messages",
+  "/servers",
   "/ws",
 ];
 

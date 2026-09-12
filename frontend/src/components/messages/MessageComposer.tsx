@@ -1,19 +1,34 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { useTypingIndicator } from "../../hooks/useTypingIndicator";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { useToastStore } from "../../stores/toastStore";
+import { Spinner } from "../ui/Spinner";
+import { resizeImageFile, readImageDimensions } from "../../lib/image";
+import { readVideoDurationMs } from "../../lib/video";
+
+interface MediaMeta {
+  durationMs?: number;
+  widthPx?: number;
+  heightPx?: number;
+}
 
 interface MessageComposerProps {
   conversationId: string;
   onSend: (content: string) => void;
   onSendVoice: (blob: Blob, durationMs: number) => void;
+  onSendMedia: (blob: Blob, meta: MediaMeta) => void;
 }
 
 const MAX_TEXTAREA_HEIGHT_PX = 160;
+const MAX_IMAGE_DIMENSION = 1600;
+const MAX_VIDEO_DURATION_MS = 120_000;
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
-export function MessageComposer({ conversationId, onSend, onSendVoice }: MessageComposerProps) {
+export function MessageComposer({ conversationId, onSend, onSendVoice, onSendMedia }: MessageComposerProps) {
   const [value, setValue] = useState("");
+  const [isPreparingMedia, setIsPreparingMedia] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { notifyTyping, stopTyping } = useTypingIndicator(conversationId);
   const recorder = useAudioRecorder();
   const pushToast = useToastStore((s) => s.push);
@@ -63,6 +78,38 @@ export function MessageComposer({ conversationId, onSend, onSendVoice }: Message
     if (result) onSendVoice(result.blob, result.durationMs);
   }
 
+  async function handleFileSelected(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setIsPreparingMedia(true);
+    try {
+      if (file.type.startsWith("image/")) {
+        const resized = await resizeImageFile(file, MAX_IMAGE_DIMENSION);
+        const { width, height } = await readImageDimensions(resized);
+        onSendMedia(resized, { widthPx: width, heightPx: height });
+      } else if (file.type.startsWith("video/")) {
+        if (file.size > MAX_VIDEO_BYTES) {
+          pushToast("That video is too large (50MB max).", "error");
+          return;
+        }
+        const durationMs = await readVideoDurationMs(file);
+        if (durationMs > MAX_VIDEO_DURATION_MS) {
+          pushToast("That video is too long (2 minutes max).", "error");
+          return;
+        }
+        onSendMedia(file, { durationMs });
+      } else {
+        pushToast("Pick an image or video file.", "error");
+      }
+    } catch {
+      pushToast("Couldn't process that file. Try again.", "error");
+    } finally {
+      setIsPreparingMedia(false);
+    }
+  }
+
   if (recorder.isRecording) {
     return (
       <div className="border-t border-border bg-surface px-4 py-3">
@@ -97,6 +144,22 @@ export function MessageComposer({ conversationId, onSend, onSendVoice }: Message
         <label htmlFor="composer-input" className="sr-only">
           Message
         </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,video/webm,video/mp4"
+          className="hidden"
+          onChange={(e) => void handleFileSelected(e)}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isPreparingMedia}
+          aria-label="Attach a picture or video"
+          className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary disabled:opacity-50"
+        >
+          {isPreparingMedia ? <Spinner size="sm" /> : <AttachIcon />}
+        </button>
         <textarea
           id="composer-input"
           ref={textareaRef}
@@ -146,6 +209,20 @@ function SendIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M14 2 6.5 9.5M14 2 9.5 14l-3-5.5L1 5.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AttachIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M11 5.5 6.2 10.3a2 2 0 0 0 2.83 2.83l5.3-5.3a3.5 3.5 0 0 0-4.95-4.95l-5.3 5.3a5 5 0 0 0 7.07 7.07"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

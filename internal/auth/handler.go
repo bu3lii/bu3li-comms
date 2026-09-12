@@ -3,21 +3,33 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/bu3lii/bu3li-comms/internal/ratelimit"
 	"github.com/bu3lii/bu3li-comms/internal/security"
 	"github.com/bu3lii/bu3li-comms/internal/session"
 	"github.com/bu3lii/bu3li-comms/internal/users"
 )
 
+// loginAttemptLimit/loginAttemptWindow throttle credential guessing per
+// source IP. Deliberately generous enough not to lock out someone who
+// mistypes their password a couple of times.
+const (
+	loginAttemptLimit  = 10
+	loginAttemptWindow = 5 * time.Minute
+)
+
 type Handler struct {
 	users    *users.Service
 	sessions *session.Service
+	limiter  *ratelimit.Limiter
 }
 
-func NewHandler(userService *users.Service, sessionService *session.Service) *Handler {
+func NewHandler(userService *users.Service, sessionService *session.Service, limiter *ratelimit.Limiter) *Handler {
 	return &Handler{
 		users:    userService,
 		sessions: sessionService,
+		limiter:  limiter,
 	}
 }
 
@@ -27,6 +39,11 @@ type LoginRequest struct {
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	if !h.limiter.Allow(r.Context(), "ratelimit:login:"+ratelimit.ClientIP(r), loginAttemptLimit, loginAttemptWindow) {
+		http.Error(w, "too many login attempts, try again later", http.StatusTooManyRequests)
+		return
+	}
+
 	var req LoginRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -54,10 +71,12 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
+	json.NewEncoder(w).Encode(map[string]any{
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"has_avatar": user.HasAvatar,
+		"created_at": user.CreatedAt,
 	})
 }
 

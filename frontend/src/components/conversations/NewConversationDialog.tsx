@@ -137,7 +137,7 @@ function DialogContent({ onDone }: { onDone: () => void }) {
                   isSelected ? "bg-surface-raised" : ""
                 }`}
               >
-                <Avatar seed={user.id} name={user.username} size="sm" />
+                <Avatar seed={user.id} name={user.username} size="sm" userId={user.id} hasAvatar={user.has_avatar} />
                 <span className="flex-1 truncate">{user.username}</span>
                 {isSelected && <CheckIcon />}
               </button>

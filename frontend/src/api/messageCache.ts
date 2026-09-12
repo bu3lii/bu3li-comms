@@ -56,3 +56,31 @@ export function markRetrying(messages: ChatMessage[], clientMessageId: string): 
     m.client_message_id === clientMessageId ? { ...m, status: "pending" } : m,
   );
 }
+
+/** Applies a `message.reaction_added` event, or an optimistic local add. */
+export function addReactionLocal(messages: ChatMessage[], messageId: string, userId: string, emoji: string): ChatMessage[] {
+  return messages.map((m) => {
+    if (m.id !== messageId) return m;
+
+    const reactions = m.reactions.map((r) => ({ ...r, user_ids: [...r.user_ids] }));
+    const existing = reactions.find((r) => r.emoji === emoji);
+    if (existing) {
+      if (!existing.user_ids.includes(userId)) existing.user_ids.push(userId);
+    } else {
+      reactions.push({ emoji, user_ids: [userId] });
+    }
+    return { ...m, reactions };
+  });
+}
+
+/** Applies a `message.reaction_removed` event, or an optimistic local remove. */
+export function removeReactionLocal(messages: ChatMessage[], messageId: string, userId: string, emoji: string): ChatMessage[] {
+  return messages.map((m) => {
+    if (m.id !== messageId) return m;
+
+    const reactions = m.reactions
+      .map((r) => (r.emoji === emoji ? { ...r, user_ids: r.user_ids.filter((id) => id !== userId) } : r))
+      .filter((r) => r.user_ids.length > 0);
+    return { ...m, reactions };
+  });
+}

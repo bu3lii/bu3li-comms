@@ -9,7 +9,7 @@ export function CurrentUserRow({ user }: { user: User }) {
 
   return (
     <div className="mt-auto flex items-center gap-2.5 border-t border-border px-4 py-3">
-      <Avatar seed={user.id} name={user.username} />
+      <Avatar seed={user.id} name={user.username} userId={user.id} hasAvatar={user.has_avatar} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-text-primary">{user.username}</p>
         <p className="truncate text-xs text-text-tertiary">{user.email}</p>

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-canvas px-4 text-text-primary">
+    <div className="smooth-swap flex min-h-dvh items-center justify-center bg-canvas px-4 text-text-primary">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-baseline justify-center gap-1.5">
           <span className="font-display text-2xl font-semibold tracking-tight">bu3li</span>

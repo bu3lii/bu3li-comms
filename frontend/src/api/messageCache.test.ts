@@ -14,6 +14,9 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     updated_at: "2026-01-01T00:00:00.000Z",
     has_attachment: false,
     attachment_duration_ms: 0,
+    attachment_width_px: 0,
+    attachment_height_px: 0,
+    reactions: [],
     ...overrides,
   };
 }

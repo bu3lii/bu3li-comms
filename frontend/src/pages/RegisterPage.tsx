@@ -42,7 +42,9 @@ export function RegisterPage() {
       {
         onSuccess: () => navigate("/chat", { replace: true }),
         onError: (error) => {
-          if (error instanceof ApiError) {
+          if (error instanceof ApiError && error.isRateLimited) {
+            setFormError("Too many accounts created recently. Try again later.");
+          } else if (error instanceof ApiError) {
             setFormError("Could not create that account. The email or username may already be taken.");
           } else if (error instanceof NetworkError) {
             setFormError(error.message);

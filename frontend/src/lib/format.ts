@@ -2,6 +2,10 @@ export function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
+export function formatMonthYear(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
 export function isSameDay(a: string, b: string): boolean {
   const dateA = new Date(a);
   const dateB = new Date(b);

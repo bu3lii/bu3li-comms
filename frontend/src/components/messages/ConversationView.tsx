@@ -6,10 +6,12 @@ import { VoiceChannelBar } from "../../calls/components/VoiceChannelBar";
 import { useMessages } from "../../hooks/useMessages";
 import { useSendMessage } from "../../hooks/useSendMessage";
 import { useSendVoiceMessage } from "../../hooks/useSendVoiceMessage";
+import { useSendMediaMessage } from "../../hooks/useSendMediaMessage";
 import { useEditMessage } from "../../hooks/useEditMessage";
 import { useDeleteMessage } from "../../hooks/useDeleteMessage";
 import { useReadReceipts } from "../../hooks/useReadReceipts";
 import { useConversations } from "../../hooks/useConversations";
+import { useToggleReaction } from "../../hooks/useToggleReaction";
 import { EmptyState } from "../ui/EmptyState";
 import { Spinner } from "../ui/Spinner";
 import type { User } from "../../types/user";
@@ -21,8 +23,10 @@ export function ConversationView({ conversationId, currentUser }: { conversation
   const { data: messages = [], isLoading: isLoadingMessages } = useMessages(conversationId);
   const { send, retry } = useSendMessage(conversationId);
   const sendVoice = useSendVoiceMessage(conversationId);
+  const sendMedia = useSendMediaMessage(conversationId);
   const editMessage = useEditMessage(conversationId);
   const deleteMessage = useDeleteMessage(conversationId);
+  const toggleReaction = useToggleReaction(conversationId);
 
   useReadReceipts(conversationId, messages, currentUser.id);
 
@@ -62,12 +66,14 @@ export function ConversationView({ conversationId, currentUser }: { conversation
         }}
         onDelete={(messageId) => deleteMessage.mutate(messageId)}
         onRetry={(message) => retry(message)}
+        onToggleReaction={(messageId, emoji, isActive) => toggleReaction.mutate({ messageId, emoji, isActive })}
       />
       <TypingIndicator conversationId={conversationId} />
       <MessageComposer
         conversationId={conversationId}
         onSend={send}
         onSendVoice={(blob, durationMs) => sendVoice.mutate({ blob, durationMs })}
+        onSendMedia={(blob, meta) => sendMedia.mutate({ blob, ...meta })}
       />
     </>
   );

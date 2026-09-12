@@ -62,6 +62,16 @@ class CallManager {
     useCallStore.getState().setMuted(nextMuted);
   }
 
+  /**
+   * Deafen stops the caller from *hearing* the call — distinct from mute,
+   * which stops them from being heard. Purely a local playback toggle
+   * (CallAudioSinks mutes the <audio> elements); it doesn't touch the mic
+   * track, so muted-ness is unaffected either way.
+   */
+  toggleDeafen(): void {
+    useCallStore.getState().setDeafened(!useCallStore.getState().isDeafened);
+  }
+
   handleCallCreated(conversationId: string, callerId: string): void {
     if (useCallStore.getState().status !== "idle") return;
     useCallStore.getState().setIncoming(conversationId, callerId);

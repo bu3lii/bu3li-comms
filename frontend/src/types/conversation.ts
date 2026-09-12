@@ -10,6 +10,7 @@ export const conversationSchema = z.object({
 export const memberSchema = z.object({
   id: z.string(),
   username: z.string(),
+  has_avatar: z.boolean().default(false),
 });
 
 export const lastMessageSchema = z.object({
@@ -17,6 +18,7 @@ export const lastMessageSchema = z.object({
   sender_id: z.string(),
   content: z.string(),
   has_attachment: z.boolean(),
+  attachment_kind: z.enum(["audio", "image", "video"]).optional(),
   created_at: z.string(),
 });
 
@@ -25,6 +27,7 @@ export const conversationSummarySchema = z.object({
   type: conversationTypeSchema,
   members: z.array(memberSchema),
   last_message: lastMessageSchema.optional(),
+  unread_count: z.number().default(0),
 });
 
 export const conversationSummaryListSchema = z.array(conversationSummarySchema);

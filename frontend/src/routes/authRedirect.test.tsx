@@ -51,7 +51,7 @@ describe("auth redirect behavior", () => {
   });
 
   it("redirects an already-authenticated visitor away from /login into chat", async () => {
-    vi.mocked(getMe).mockResolvedValue({ id: "u1", username: "alice", email: "alice@example.com" });
+    vi.mocked(getMe).mockResolvedValue({ id: "u1", username: "alice", email: "alice@example.com", has_avatar: false });
 
     renderApp("/login");
 
@@ -59,7 +59,7 @@ describe("auth redirect behavior", () => {
   });
 
   it("keeps an authenticated visitor on /chat", async () => {
-    vi.mocked(getMe).mockResolvedValue({ id: "u1", username: "alice", email: "alice@example.com" });
+    vi.mocked(getMe).mockResolvedValue({ id: "u1", username: "alice", email: "alice@example.com", has_avatar: false });
 
     renderApp("/chat");
 

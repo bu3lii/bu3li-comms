@@ -3,6 +3,7 @@ import { sendVoiceMessage } from "../api/messages";
 import { insertOrReconcileMessage } from "../api/messageCache";
 import { messagesQueryKey } from "./useMessages";
 import { useToastStore } from "../stores/toastStore";
+import { ApiError } from "../api/client";
 import type { ChatMessage } from "../types/message";
 
 export function useSendVoiceMessage(conversationId: string) {
@@ -20,7 +21,11 @@ export function useSendVoiceMessage(conversationId: string) {
     onSuccess: (message) => {
       queryClient.setQueryData<ChatMessage[]>(queryKey, (old = []) => insertOrReconcileMessage(old, message));
     },
-    onError: () => {
+    onError: (error) => {
+      if (error instanceof ApiError && error.isRateLimited) {
+        pushToast("Sending too fast — wait a moment and try again.", "error");
+        return;
+      }
       pushToast("Couldn't send that voice message. Try again.", "error");
     },
   });

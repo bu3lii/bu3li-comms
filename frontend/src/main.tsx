@@ -34,3 +34,12 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+// Production-only: the dev server's own module graph is a much better
+// "instant reload" than a service worker, and registering one under Vite
+// dev would fight HMR.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}

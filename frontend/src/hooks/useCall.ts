@@ -8,6 +8,7 @@ export function useCall() {
   const participantIds = useCallStore((s) => s.participantIds);
   const remoteStreams = useCallStore((s) => s.remoteStreams);
   const isMuted = useCallStore((s) => s.isMuted);
+  const isDeafened = useCallStore((s) => s.isDeafened);
 
   return {
     status,
@@ -16,10 +17,12 @@ export function useCall() {
     participantIds,
     remoteStreams,
     isMuted,
+    isDeafened,
     start: (conversationId: string) => callManager.start(conversationId),
     accept: () => callManager.accept(),
     decline: () => callManager.decline(),
     leave: () => callManager.leave(),
     toggleMute: () => callManager.toggleMute(),
+    toggleDeafen: () => callManager.toggleDeafen(),
   };
 }

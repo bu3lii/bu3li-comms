@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { messageSchema } from "../types/message";
+import { serverChannelSchema } from "../types/server";
 
 const messageDeletedSchema = z.object({
   message_id: z.string(),
@@ -41,6 +42,31 @@ const callEndedSchema = z.object({
   conversation_id: z.string(),
 });
 
+const serverMemberChangedSchema = z.object({
+  server_id: z.string(),
+  user_id: z.string(),
+});
+
+const serverChannelDeletedSchema = z.object({
+  server_id: z.string(),
+  channel_id: z.string(),
+});
+
+const serverDeletedSchema = z.object({
+  server_id: z.string(),
+});
+
+const serverUpdatedSchema = z.object({
+  server_id: z.string(),
+});
+
+const messageReactionSchema = z.object({
+  message_id: z.string(),
+  conversation_id: z.string(),
+  user_id: z.string(),
+  emoji: z.string(),
+});
+
 /** Matches what `RTCIceCandidate.prototype.toJSON()` produces. */
 const iceCandidateInitSchema = z.object({
   candidate: z.string().optional(),
@@ -67,6 +93,17 @@ export const realtimeEventSchemas = {
   "message.updated": messageSchema,
   "message.deleted": messageDeletedSchema,
   "message.read": messageReadSchema,
+  "message.reaction_added": messageReactionSchema,
+  "message.reaction_removed": messageReactionSchema,
+  "server.member_added": serverMemberChangedSchema,
+  "server.member_removed": serverMemberChangedSchema,
+  "server.channel_created": serverChannelSchema,
+  "server.channel_deleted": serverChannelDeletedSchema,
+  "server.channels_reordered": serverUpdatedSchema,
+  "server.deleted": serverDeletedSchema,
+  "server.updated": serverUpdatedSchema,
+  "server.role_changed": serverUpdatedSchema,
+  "server.member_role_changed": serverMemberChangedSchema,
   "typing.started": typingSchema,
   "typing.stopped": typingSchema,
   "user.online": presenceSchema,

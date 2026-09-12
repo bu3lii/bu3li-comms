@@ -22,6 +22,10 @@ export class ApiError extends Error {
     return this.status === 409;
   }
 
+  get isRateLimited(): boolean {
+    return this.status === 429;
+  }
+
   get isServerError(): boolean {
     return this.status >= 500;
   }
@@ -34,7 +38,7 @@ export class NetworkError extends Error {
   }
 }
 
-async function request(path: string, init: RequestInit): Promise<Response> {
+export async function request(path: string, init: RequestInit): Promise<Response> {
   let response: Response;
 
   try {

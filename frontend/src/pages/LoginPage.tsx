@@ -31,7 +31,9 @@ export function LoginPage() {
           navigate(from, { replace: true });
         },
         onError: (error) => {
-          if (error instanceof ApiError && (error.isUnauthorized || error.status === 400)) {
+          if (error instanceof ApiError && error.isRateLimited) {
+            setFormError("Too many attempts. Wait a few minutes and try again.");
+          } else if (error instanceof ApiError && (error.isUnauthorized || error.status === 400)) {
             setFormError("Incorrect email or password.");
           } else if (error instanceof NetworkError) {
             setFormError(error.message);

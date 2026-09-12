@@ -11,6 +11,8 @@ interface CallStore {
   remoteStreams: Record<string, MediaStream>;
   localStream: MediaStream | null;
   isMuted: boolean;
+  /** Stops the caller from hearing the call, independent of whether their own mic is muted. */
+  isDeafened: boolean;
   /** Whether the call UI has taken over the full page. Purely presentational — doesn't affect the call itself. */
   isExpanded: boolean;
 
@@ -21,6 +23,7 @@ interface CallStore {
   removeRemoteStream: (userId: string) => void;
   setLocalStream: (stream: MediaStream | null) => void;
   setMuted: (isMuted: boolean) => void;
+  setDeafened: (isDeafened: boolean) => void;
   setExpanded: (isExpanded: boolean) => void;
   reset: () => void;
 }
@@ -33,6 +36,7 @@ const initial = {
   remoteStreams: {},
   localStream: null,
   isMuted: false,
+  isDeafened: false,
   isExpanded: false,
 };
 
@@ -52,6 +56,7 @@ export const useCallStore = create<CallStore>((set) => ({
     }),
   setLocalStream: (localStream) => set({ localStream }),
   setMuted: (isMuted) => set({ isMuted }),
+  setDeafened: (isDeafened) => set({ isDeafened }),
   setExpanded: (isExpanded) => set({ isExpanded }),
   reset: () => set(initial),
 }));

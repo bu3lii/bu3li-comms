@@ -1,7 +1,7 @@
 import { useCallStore } from "../../stores/callStore";
 import { callManager } from "../callManager";
 import { CallParticipantTile } from "./CallParticipantTile";
-import { ExpandIcon, MicIcon, MicOffIcon, PhoneOffIcon } from "./icons";
+import { ExpandIcon, HeadphonesIcon, HeadphonesOffIcon, MicIcon, MicOffIcon, PhoneOffIcon } from "./icons";
 
 /** Compact "you're in a call" bar — persists across navigation since the call itself isn't tied to one conversation view. */
 export function ActiveCallBar({ currentUserId }: { currentUserId: string }) {
@@ -9,6 +9,7 @@ export function ActiveCallBar({ currentUserId }: { currentUserId: string }) {
   const remoteStreams = useCallStore((s) => s.remoteStreams);
   const localStream = useCallStore((s) => s.localStream);
   const isMuted = useCallStore((s) => s.isMuted);
+  const isDeafened = useCallStore((s) => s.isDeafened);
 
   const others = participantIds.filter((id) => id !== currentUserId);
 
@@ -33,6 +34,17 @@ export function ActiveCallBar({ currentUserId }: { currentUserId: string }) {
         }`}
       >
         {isMuted ? <MicOffIcon /> : <MicIcon />}
+      </button>
+      <button
+        type="button"
+        onClick={() => callManager.toggleDeafen()}
+        aria-label={isDeafened ? "Undeafen" : "Deafen"}
+        aria-pressed={isDeafened}
+        className={`flex h-8 w-8 items-center justify-center rounded-full ${
+          isDeafened ? "bg-danger/15 text-danger" : "bg-surface-raised text-text-secondary hover:text-text-primary"
+        }`}
+      >
+        {isDeafened ? <HeadphonesOffIcon /> : <HeadphonesIcon />}
       </button>
       <button
         type="button"

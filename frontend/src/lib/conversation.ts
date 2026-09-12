@@ -11,8 +11,13 @@ export function otherMembers(conversation: ConversationSummary, currentUserId: s
   return conversation.members.filter((m) => m.id !== currentUserId);
 }
 
+/** For a direct conversation, the other member — used for presence, 1:1 calling, and avatar rendering. */
+export function directPeer(conversation: ConversationSummary, currentUserId: string): Member | undefined {
+  if (conversation.type !== "direct") return undefined;
+  return otherMembers(conversation, currentUserId)[0];
+}
+
 /** For a direct conversation, the other member's id — used for presence and 1:1 calling. */
 export function directPeerId(conversation: ConversationSummary, currentUserId: string): string | undefined {
-  if (conversation.type !== "direct") return undefined;
-  return otherMembers(conversation, currentUserId)[0]?.id;
+  return directPeer(conversation, currentUserId)?.id;
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { realtimeSocket, type ConnectionStatus } from "../realtime/socket";
 import type { RealtimeEvent } from "../realtime/events";
-import { insertOrReconcileMessage, removeById, replaceIfNewer } from "../api/messageCache";
+import { addReactionLocal, insertOrReconcileMessage, removeById, removeReactionLocal, replaceIfNewer } from "../api/messageCache";
 import { messagesQueryKey } from "./useMessages";
 import { useConnectionStore } from "../stores/connectionStore";
 import { usePresenceStore } from "../stores/presenceStore";
@@ -12,6 +12,7 @@ import { useToastStore } from "../stores/toastStore";
 import { callManager } from "../calls/callManager";
 import { useVoiceChannelStore } from "../stores/voiceChannelStore";
 import { conversationsQueryKey } from "./useConversations";
+import { serversQueryKey } from "./useServers";
 import type { ChatMessage } from "../types/message";
 
 /**
@@ -79,7 +80,22 @@ export function useRealtime(enabled: boolean): void {
           break;
         case "message.read":
           setLastRead(event.data.conversation_id, event.data.user_id, event.data.message_id);
+          void queryClient.invalidateQueries({ queryKey: conversationsQueryKey() });
           break;
+        case "message.reaction_added": {
+          const key = messagesQueryKey(event.data.conversation_id);
+          queryClient.setQueryData<ChatMessage[]>(key, (old = []) =>
+            addReactionLocal(old, event.data.message_id, event.data.user_id, event.data.emoji),
+          );
+          break;
+        }
+        case "message.reaction_removed": {
+          const key = messagesQueryKey(event.data.conversation_id);
+          queryClient.setQueryData<ChatMessage[]>(key, (old = []) =>
+            removeReactionLocal(old, event.data.message_id, event.data.user_id, event.data.emoji),
+          );
+          break;
+        }
         case "presence.snapshot":
           for (const userId of event.data.online_user_ids) {
             setOnline(userId, true);
@@ -108,6 +124,20 @@ export function useRealtime(enabled: boolean): void {
           break;
         case "webrtc.ice_candidate":
           void callManager.handleIceCandidate(event.data.conversation_id, event.data.from_user_id, event.data.candidate);
+          break;
+        case "server.member_added":
+        case "server.member_removed":
+        case "server.member_role_changed":
+        case "server.channel_created":
+        case "server.channel_deleted":
+        case "server.channels_reordered":
+        case "server.deleted":
+        case "server.updated":
+        case "server.role_changed":
+          void queryClient.invalidateQueries({ queryKey: serversQueryKey() });
+          if (event.type === "server.member_added" || event.type === "server.channel_created") {
+            void queryClient.invalidateQueries({ queryKey: conversationsQueryKey() });
+          }
           break;
       }
     }

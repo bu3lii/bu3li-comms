@@ -16,9 +16,19 @@ interface MessageListProps {
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
   onRetry: (message: ChatMessage) => void;
+  onToggleReaction: (messageId: string, emoji: string, isActive: boolean) => void;
 }
 
-export function MessageList({ conversationId, messages, currentUserId, isLoading, onEdit, onDelete, onRetry }: MessageListProps) {
+export function MessageList({
+  conversationId,
+  messages,
+  currentUserId,
+  isLoading,
+  onEdit,
+  onDelete,
+  onRetry,
+  onToggleReaction,
+}: MessageListProps) {
   const { containerRef, handleScroll } = useAutoScroll(messages.length > 0 ? messages[messages.length - 1] : null);
   const lastReadByPeer = useReadReceiptsStore((s) => s.lastReadByConversation[conversationId]);
 
@@ -26,7 +36,7 @@ export function MessageList({ conversationId, messages, currentUserId, isLoading
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center">
+      <div key={conversationId} className="smooth-swap flex flex-1 items-center justify-center">
         <Spinner />
       </div>
     );
@@ -34,14 +44,19 @@ export function MessageList({ conversationId, messages, currentUserId, isLoading
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1">
+      <div key={conversationId} className="smooth-swap flex-1">
         <EmptyState title="No messages yet" description="Send the first message to get things started." />
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-3">
+    <div
+      key={conversationId}
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="smooth-swap flex-1 overflow-y-auto px-4 py-3"
+    >
       {messages.map((message, index) => {
         const previous = messages[index - 1];
         const isOwn = message.sender_id === currentUserId;
@@ -56,9 +71,11 @@ export function MessageList({ conversationId, messages, currentUserId, isLoading
               isOwn={isOwn}
               showMeta={showMeta}
               isReadByPeer={isOwn && index <= highestReadIndex}
+              currentUserId={currentUserId}
               onEdit={(content) => onEdit(message.id, content)}
               onDelete={() => onDelete(message.id)}
               onRetry={() => onRetry(message)}
+              onToggleReaction={(emoji, isActive) => onToggleReaction(message.id, emoji, isActive)}
             />
           </Fragment>
         );

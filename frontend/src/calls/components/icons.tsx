@@ -46,6 +46,27 @@ export function MicOffIcon() {
   );
 }
 
+export function HeadphonesIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3 9V7.5a5 5 0 0 1 10 0V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <rect x="1.5" y="9" width="3" height="4.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="11.5" y="9" width="3" height="4.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+export function HeadphonesOffIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3 9V7.5a5 5 0 0 1 10 0V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <rect x="1.5" y="9" width="3" height="4.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="11.5" y="9" width="3" height="4.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 2l12 12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function VoiceIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">

@@ -142,6 +142,20 @@
     color: var(--color-text-primary);
   }
 
+  /*
+   * Tailwind's preflight resets `margin` on every element (`* { margin: 0 }`,
+   * an author-stylesheet rule). Author rules always beat the browser's
+   * built-in `dialog:modal { margin: auto }` centering, regardless of
+   * specificity — origin beats specificity in the cascade — which is why
+   * every <dialog> in this app was rendering pinned to the top-left instead
+   * of centered. Restoring `margin: auto` here (also an author rule, but
+   * `dialog` as a type selector is more specific than `*`) fixes it for
+   * every dialog at once.
+   */
+  dialog {
+    margin: auto;
+  }
+
   ::selection {
     background-color: var(--color-accent);
     color: var(--color-accent-text);
@@ -224,4 +238,89 @@
 .speaking-ring {
   box-shadow: 0 0 0 2px var(--color-online);
   animation: speaking-pulse 1.1s ease-in-out infinite;
+}
+
+/*
+ * Smooth mode (src/stores/motionStore.ts) — opt-in transitions across the
+ * app for people who want motion instead of instant state changes.
+ * Everything here is scoped under [data-motion="smooth"] on <html>, so
+ * default behavior (data-motion absent) is completely untouched: dialogs,
+ * conversation swaps, and hover/focus states stay exactly as instant as
+ * they were before this existed. The reduced-motion block above still wins
+ * regardless of this — its `!important` durations override any of these
+ * declarations no matter which comes later in the file.
+ */
+[data-motion="smooth"] button,
+[data-motion="smooth"] a,
+[data-motion="smooth"] input,
+[data-motion="smooth"] textarea,
+[data-motion="smooth"] select {
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
+/* Native <dialog> open/close, entirely CSS-driven — no JS changes needed
+   in any dialog component. `allow-discrete` keeps the element painted
+   (mid-transition) for the full duration on close, instead of the
+   `display`/top-layer removal happening instantly when `open` is dropped. */
+[data-motion="smooth"] dialog {
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease,
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+[data-motion="smooth"] dialog:not([open]) {
+  opacity: 0;
+  transform: scale(0.96) translateY(4px);
+}
+
+[data-motion="smooth"] dialog::backdrop {
+  transition:
+    opacity 200ms ease,
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+  opacity: 1;
+}
+
+[data-motion="smooth"] dialog:not([open])::backdrop {
+  opacity: 0;
+}
+
+@starting-style {
+  [data-motion="smooth"] dialog[open] {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+
+  [data-motion="smooth"] dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@keyframes smooth-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Applied to things that should visibly settle in when they replace their
+   previous contents (a newly opened conversation, a newly selected
+   channel) — a no-op outside smooth mode since the animation is scoped to
+   the same attribute selector. */
+[data-motion="smooth"] .smooth-swap {
+  animation: smooth-swap 220ms ease;
 }

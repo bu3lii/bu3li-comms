@@ -1,0 +1,18 @@
+{
+  "name": "bu3li comms",
+  "short_name": "bu3li",
+  "description": "Realtime messaging and voice calls.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#12141a",
+  "theme_color": "#12141a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

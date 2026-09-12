@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { Sidebar } from "../components/layout/Sidebar";
+import { ServerRail } from "../components/servers/ServerRail";
 import { ConversationView } from "../components/messages/ConversationView";
 import { EmptyState } from "../components/ui/EmptyState";
 import { useMe } from "../hooks/useMe";
@@ -15,7 +16,7 @@ export function ChatPage() {
   }
 
   return (
-    <AppShell sidebar={<Sidebar user={user} />} mobilePane={conversationId ? "conversation" : "sidebar"}>
+    <AppShell rail={<ServerRail />} sidebar={<Sidebar user={user} />} mobilePane={conversationId ? "conversation" : "sidebar"}>
       {conversationId ? (
         <ConversationView conversationId={conversationId} currentUser={user} />
       ) : (

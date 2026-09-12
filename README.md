@@ -1,6 +1,6 @@
 # bu3li-comms
 
-A realtime messaging app: Go backend (Postgres + Redis + WebSockets), React/TypeScript frontend. Direct and group conversations, text and voice messages, typing indicators, read receipts, presence, and WebRTC voice calls (1:1 and group voice channels).
+A realtime messaging app: Go backend (Postgres + Redis + WebSockets), React/TypeScript frontend. Direct/group conversations plus Discord-style servers with multiple text/voice channels, text/voice/picture/video messages, message reactions, @mentions, markdown-lite formatting, unread badges, profile pictures, typing indicators, read receipts, presence, rate limiting, and WebRTC voice calls (1:1, group voice channels, and server voice channels, with an optional local TURN server).
 
 ## Run everything with one command
 

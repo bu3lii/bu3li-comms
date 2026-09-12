@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { avatarUrl } from "../../api/users";
+
 const PALETTE = [
   "#E8A33D", // accent amber
   "#4FC1B0", // teal
@@ -33,6 +36,9 @@ interface AvatarProps {
   /** Text used to derive the visible initials, e.g. a username. */
   name: string;
   size?: "sm" | "md" | "lg";
+  /** When set with hasAvatar, renders the user's uploaded profile picture instead of initials. */
+  userId?: string;
+  hasAvatar?: boolean;
 }
 
 const SIZE_CLASSES: Record<NonNullable<AvatarProps["size"]>, string> = {
@@ -41,8 +47,21 @@ const SIZE_CLASSES: Record<NonNullable<AvatarProps["size"]>, string> = {
   lg: "h-16 w-16 rounded-[10px] text-xl",
 };
 
-export function Avatar({ seed, name, size = "md" }: AvatarProps) {
+export function Avatar({ seed, name, size = "md", userId, hasAvatar }: AvatarProps) {
+  const [imageFailed, setImageFailed] = useState(false);
   const color = PALETTE[hashString(seed) % PALETTE.length];
+  const showImage = hasAvatar && userId && !imageFailed;
+
+  if (showImage) {
+    return (
+      <img
+        src={avatarUrl(userId)}
+        alt=""
+        className={`inline-block shrink-0 object-cover ${SIZE_CLASSES[size]}`}
+        onError={() => setImageFailed(true)}
+      />
+    );
+  }
 
   return (
     <span
