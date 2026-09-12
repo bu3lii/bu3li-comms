@@ -49,4 +49,4 @@ See `frontend/BACKEND_GAPS.md` for what's been filled in since the initial pass 
 
 ## What's next
 
-See `ROADMAP.md` for where this could go — picture/video attachments, profile pictures, servers-not-just-groups, room-based (SFU) voice, and more.
+See `ROADMAP.md` for where this could go next — room-based (SFU) voice, video calls/screen share, E2EE DMs, and further out.
