@@ -1,17 +1,14 @@
 package auth
 
 import (
-	"context"
 	"net/http"
+
+	"github.com/bu3lii/bu3li-comms/internal/session"
 )
-
-type contextKey string
-
-const userIDKey contextKey = "userID"
 
 func (h *Handler) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_id")
+		cookie, err := r.Cookie(session.CookieName)
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
@@ -23,13 +20,6 @@ func (h *Handler) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r.WithContext(session.WithUserID(r.Context(), userID)))
 	})
-}
-
-func UserIDFromContext(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value(userIDKey).(string)
-	return userID, ok
 }

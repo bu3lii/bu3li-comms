@@ -5,15 +5,16 @@ import (
 	"net/http"
 
 	"github.com/bu3lii/bu3li-comms/internal/security"
+	"github.com/bu3lii/bu3li-comms/internal/session"
 	"github.com/bu3lii/bu3li-comms/internal/users"
 )
 
 type Handler struct {
 	users    *users.Service
-	sessions *SessionService
+	sessions *session.Service
 }
 
-func NewHandler(userService *users.Service, sessionService *SessionService) *Handler {
+func NewHandler(userService *users.Service, sessionService *session.Service) *Handler {
 	return &Handler{
 		users:    userService,
 		sessions: sessionService,
@@ -46,21 +47,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := h.sessions.Create(r.Context(), user.ID)
+	err = h.sessions.IssueCookie(r.Context(), w, user.ID)
 	if err != nil {
 		http.Error(w, "failed to create session", http.StatusInternalServerError)
 		return
 	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(SessionTTL.Seconds()),
-	})
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -72,7 +63,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := UserIDFromContext(r.Context())
+	userID, ok := session.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -89,20 +80,6 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err == nil {
-		_ = h.sessions.Delete(r.Context(), cookie.Value)
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   -1,
-	})
-
+	h.sessions.ClearCookie(r.Context(), w, r)
 	w.WriteHeader(http.StatusNoContent)
 }

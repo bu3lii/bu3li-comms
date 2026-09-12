@@ -62,3 +62,73 @@ func (s *Service) GetByID(ctx context.Context, userID string) (User, error) {
 
 	return user, err
 }
+
+func (s *Service) UpdateProfile(ctx context.Context, userID string, username string, email string) (User, error) {
+	var user User
+
+	err := s.db.QueryRow(ctx, `
+		UPDATE users
+		SET username = $1, email = $2
+		WHERE id = $3
+		RETURNING id, username, email
+	`, username, email, userID).Scan(&user.ID, &user.Username, &user.Email)
+
+	return user, err
+}
+
+func (s *Service) GetPasswordHash(ctx context.Context, userID string) (string, error) {
+	var hash string
+
+	err := s.db.QueryRow(ctx, `
+		SELECT password_hash
+		FROM users
+		WHERE id = $1
+	`, userID).Scan(&hash)
+
+	return hash, err
+}
+
+func (s *Service) UpdatePasswordHash(ctx context.Context, userID string, passwordHash string) error {
+	_, err := s.db.Exec(ctx, `
+		UPDATE users
+		SET password_hash = $1
+		WHERE id = $2
+	`, passwordHash, userID)
+
+	return err
+}
+
+const searchLimit = 20
+
+// Search looks up users by a case-insensitive username substring, for
+// starting a new conversation. Excludes excludeUserID (the caller) so
+// people don't find themselves in their own search results.
+func (s *Service) Search(ctx context.Context, query string, excludeUserID string) ([]User, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT id, username, email
+		FROM users
+		WHERE username ILIKE '%' || $1 || '%'
+			AND id != $2
+		ORDER BY username
+		LIMIT $3
+	`, query, excludeUserID, searchLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []User{}
+
+	for rows.Next() {
+		var user User
+
+		err := rows.Scan(&user.ID, &user.Username, &user.Email)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, rows.Err()
+}

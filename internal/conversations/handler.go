@@ -1,18 +1,47 @@
 package conversations
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
-	"github.com/bu3lii/bu3li-comms/internal/auth"
+	"github.com/bu3lii/bu3li-comms/internal/session"
 )
 
-type Handler struct {
-	service *Service
+// MembershipNotifier lets something outside this package (realtime, which
+// already owns the Hub and presence.Service) react when a new member joins
+// a conversation. Presence otherwise only updates on connect/disconnect, so
+// without this, two already-connected users who just started a
+// conversation together would show each other as offline until one of them
+// reconnects — see BACKEND_GAPS.md.
+type MembershipNotifier interface {
+	NotifyMembershipAdded(ctx context.Context, conversationID string, newUserID string)
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+type Handler struct {
+	service  *Service
+	notifier MembershipNotifier
+}
+
+func NewHandler(service *Service, notifier MembershipNotifier) *Handler {
+	return &Handler{service: service, notifier: notifier}
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	userID, ok := session.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	summaries, err := h.service.ListForUser(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "failed to load conversations", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(summaries)
 }
 
 type createConversationRequest struct {
@@ -20,7 +49,7 @@ type createConversationRequest struct {
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := auth.UserIDFromContext(r.Context())
+	userID, ok := session.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -56,7 +85,7 @@ type addMemberRequest struct {
 }
 
 func (h *Handler) AddMember(w http.ResponseWriter, r *http.Request) {
-	currentUserID, ok := auth.UserIDFromContext(r.Context())
+	currentUserID, ok := session.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -92,6 +121,10 @@ func (h *Handler) AddMember(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "failed to add member", http.StatusInternalServerError)
 		return
+	}
+
+	if h.notifier != nil {
+		h.notifier.NotifyMembershipAdded(r.Context(), conversationID, req.UserID)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
